@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Material Selector – Interface Web</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #eef2f3; }
+        .container { 
+            max-width: 900px; 
+            margin: auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            position: relative;
+            padding-bottom: 80px;
+        }
+        button { 
+            padding: 10px 15px; 
+            margin: 5px; 
+            border: none; 
+            background: #007bff; 
+            color: white; 
+            border-radius: 5px; 
+        }
+        button:hover { background: #0056b3; cursor: pointer; }
+        pre { 
+            background: #222; 
+            color: #0f0; 
+            padding: 20px; 
+            border-radius: 10px; 
+            white-space: pre-wrap; 
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 10px; }
+        th { background: #f0f0f0; }
+        .nav-left { position: absolute; bottom: 20px; left: 20px; }
+
+	.painel-relatorio, .painel-grafico {
+	    background: #f8f9fa;
+	    border: 1px solid #d0d0d0;
+	    padding: 20px;
+	    border-radius: 10px;
+	    font-family: Consolas, monospace;
+	    font-size: 14px;
+	    line-height: 1.5;
+	    margin-top: 10px;
+	    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	    color: #000
+	}
+
+	.painel-relatorio h2,
+        .painel-grafico h2 {
+	    margin-top: 0;
+	    color: #007bff;
+	}
+
+	.painel-relatorio .linha {
+	    padding: 6px 0;
+	    border-bottom: 1px solid #e0e0e0;
+	    color: #000
+	}
+
+	.painel-relatorio .linha:last-child {
+	    border-bottom: none;
+	}
+
+	.hide-for-pdf {
+    	    display: none !important;
+	}
+
+	.grafico-wrapper {
+    	    page-break-inside: avoid !important;
+    	    break-inside: avoid !important;
+    	    overflow: hidden;
+    	    text-align: center;
+	}
+
+	.grafico-ashby {
+   	    max-width: 100% !important;
+    	    height: auto !important;
+    	    display: block;
+    	    margin: 0 auto;
+	}
+
+	#btnExportarPDF {
+    	    margin-top: 20px; /* espaço antes do botão */
+	}	
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 style="text-align:center;">Material Selector – Interface Web</h1>
+
+    <h2>• Resultados da Seleção de Materiais</h2>
+
+    <!-- Cabeçalho do Projeto -->
+    <div id="cabecalhoProjeto" class="painel-relatorio">
+        <h2>Informações do Projeto</h2>
+        <div id="infoProjetoNome"></div>
+        <div id="infoProjetoTime"></div>
+        <div id="infoProjetoRequisitos"></div>
+        <div id="infoProjetoMerito"></div>
+        <div id="infoProjetoCategorias"></div>
+    </div>
+
+
+    <h3>Relatório do Projeto</h3>
+
+    <button id="btnGerarRelatorio" class="no-pdf">Gerar Relatório</button>
+    <pre id="output">Clique em "Gerar Relatório"…</pre>
+
+    <h3>Ranking dos Materiais Aptos (Completo e Ordenado)</h3>
+
+    <button id="btnCarregarResultados" class="no-pdf">Listar Ranking</button>
+
+    <table id="tabelaResultados">
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Nome do Material</th>
+                <th>Categoria</th>
+                <th>Score</th>
+                <th>Justificativa</th>
+                <th>Fonte das Propriedades do Material</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Navegação -->
+    <button class="nav-left no-pdf" onclick="window.location.href='materiais.html'">Voltar</button>
+    <button class="nav-right no-pdf" id="btnExportarPDF">Exportar Relatório em PDF</button>
+</div>
+
+<script src="resultados.js"></script>
+</body>
+</html>
