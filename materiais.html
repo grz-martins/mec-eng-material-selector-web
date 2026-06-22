@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Material Selector – Interface Web</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #eef2f3; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; position: relative; padding-bottom: 80px; }
+        button { padding: 10px 15px; margin: 5px; border: none; background: #007bff; color: white; border-radius: 5px; }
+        button:hover { background: #0056b3; cursor: pointer; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 10px; }
+        th { background: #f0f0f0; }
+        .nav-left { position: absolute; bottom: 20px; left: 20px; }
+        .nav-right { position: absolute; bottom: 20px; right: 20px; }
+	#btnCarregarMateriais,
+        #btnNovoMaterial {
+            margin-top: 20px;
+        }
+	.checkbox-inline {
+	    display: inline-flex;
+	    align-items: center;
+    	    gap: 8px;
+    	    white-space: nowrap;
+    	    margin: 5px 0;
+	}
+        .btn-desabilitado {
+    	    opacity: 0.5; /* aparência de desabilitado */
+            cursor: not-allowed !important; /* visual de cursor bloqueado */
+            pointer-events: auto !important; /* permite clique mesmo desabilitado */
+	}
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 style="text-align:center;">Material Selector – Interface Web</h1>
+
+    <h2>• Etapa 4 - Materiais Cadastrados</h2>
+
+    <h3>Selecione até 3 filtros de categorias ou apenas “Todos”</h3>
+
+    <label class="checkbox-inline">
+    	<input type="checkbox" class="chkCat" value="Metal">
+    	Metais
+    </label><br>
+
+    <label class="checkbox-inline">
+    	<input type="checkbox" class="chkCat" value="Compósito">
+    	Compósitos
+    </label><br>
+
+    <label class="checkbox-inline">
+    	<input type="checkbox" class="chkCat" value="Polímero">
+    	Polímeros
+    </label><br>
+
+    <label class="checkbox-inline">
+    	<input type="checkbox" class="chkCat" value="Cerâmica">
+    	Cerâmicas
+    </label><br>
+
+    <label class="checkbox-inline">
+    	<input type="checkbox" id="chkTodos" value="todos">
+    	Todos
+    </label><br>
+
+    <button id="btnCarregarMateriais">Listar Materiais</button>
+    <button id="btnNovoMaterial">Incluir Novo Material</button>
+
+    <table id="tabelaMateriais">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Categoria</th>
+		<th>Densidade (kg/m³)</th>
+		<th>Módulo de Young (GPa)</th>
+		<th>Limite de Escoamento (MPa)</th>
+		<th>Limite de Resistência (MPa)</th>
+		<th>Tenacidade à Fratura (MPa·m¹/²)</th>
+		<th>Condutividade Térmica (W/m·K)</th>
+		<th>Custo por kg (R$)</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div id="formNovoMaterial" style="display:none; margin-top:20px;">
+        <h3>Novo Material</h3>
+        <input id="novoMaterialNome" placeholder="Nome do material">
+	<select id="novoMaterialCategoria">
+        	<option value="">Selecione a categoria do material</option>
+        	<option value="Metal">Metal</option>
+        	<option value="Compósito">Compósito</option>
+        	<option value="Polímero">Polímero</option>
+        	<option value="Cerâmica">Cerâmica</option>
+    	</select>
+	<input id="novoMaterialDensidade" placeholder="Densidade (kg/m³)" type="number" step="0.01">
+        <input id="novoMaterialYoung" placeholder="Módulo de Young (GPa)" type="number" step="0.01">
+        <input id="novoMaterialEscoamento" placeholder="Limite de Escoamento (MPa)" type="number" step="0.01">
+        <input id="novoMaterialResistencia" placeholder="Limite de Resistência (MPa)" type="number" step="0.01">
+        <input id="novoMaterialTenacidade" placeholder="Tenacidade à Fratura (MPa·m¹/²)" type="number" step="0.01">
+        <input id="novoMaterialCondutividade" placeholder="Condutividade Térmica (W/m·K)" type="number" step="0.01">
+        <input id="novoMaterialCusto" placeholder="Custo por kg (R$)" type="number" step="0.01">
+        <input id="novoMaterialFonte" placeholder="Fonte dos dados de propriedades do material" maxlength="13">
+        <button id="btnSalvarMaterial">Salvar</button>
+        <button id="btnCancelarMaterial">Cancelar</button>
+    </div>
+
+    <!-- Navegação -->
+    <button class="nav-left" onclick="window.location.href='projetos.html'">Voltar</button>
+    <button class="nav-right btn-desabilitado" id="btnAvancar">Avançar</button>
+
+</div>
+
+<script src="materiais.js"></script>
+</body>
+</html>
