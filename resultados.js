@@ -1,4 +1,4 @@
-const API = "http://localhost:9000";
+const API = "https://mec-eng-material-selector-api-1.onrender.com";
 
 // =========================
 // Cabeçalho do Projeto
@@ -17,7 +17,7 @@ async function carregarCabecalho() {
         const json = await resp.json();
 
         nomeProjeto = json.data?.name || "—";
-	timeProjeto = json.data?.team || "—"
+        timeProjeto = json.data?.team || "—"
     } catch (e) {
         nomeProjeto = "—";
         timeProjeto = "—";
@@ -46,7 +46,7 @@ async function carregarCabecalho() {
     } else {
         let htmlReq = `<strong>Requisitos:</strong><ul>`;
         requisitos.forEach(r => {
-            htmlReq += `<li>${r.type} = ${r.value}</li>`;
+            htmlReq += `<li>${r.type} = ${r.value} ${r.unit}</li>`;
         });
         htmlReq += `</ul>`;
         document.getElementById("infoProjetoRequisitos").innerHTML = htmlReq;
@@ -86,6 +86,17 @@ function renderResultados(lista) {
     const tbody = document.querySelector("#tabelaResultados tbody");
     tbody.innerHTML = "";
 
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center; padding:15px; color:#555;">
+                    Nenhum resultado encontrado para este projeto
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
     lista.forEach((item, index) => {
         const idMaterial = item.materialId ?? "—";
         const nome = item.materialName ?? `Material de ID ${item.materialId}`;
@@ -124,24 +135,26 @@ document.getElementById("btnCarregarResultados").onclick = async () => {
 
     // Se tiver categorias, adiciona primeiro
     if (categorias && categorias.trim() !== "" && categorias !== "todos") {
-    	urlRanking += `?categories=${categorias}&formula=${formula}`;
+        urlRanking += `?categories=${categorias}&formula=${formula}`;
     } else {
-    	// Se não tiver categorias, só envia a fórmula
-    	urlRanking += `?formula=${formula}`;
+        // Se não tiver categorias, só envia a fórmula
+        urlRanking += `?formula=${formula}`;
     }
 
     try {
         const resp = await fetch(urlRanking);
         const json = await resp.json();
 
-        renderResultados(json.data ?? []);
+        const lista = json.data ?? [];
+        renderResultados(lista);
+
     } catch (e) {
         alert("O backend ainda não possui rota /api/selection/project/{projectId}/ranked");
     }
 };
 
 // =========================
-// Relatório completo
+// Relatório com gráfico
 // =========================
 document.getElementById("btnGerarRelatorio").onclick = async () => {
 
@@ -156,49 +169,71 @@ document.getElementById("btnGerarRelatorio").onclick = async () => {
     let urlReport = `${API}/api/selection/project/${projectId}/resume`;
 
     if (categorias && categorias.trim() !== "" && categorias !== "todos") {
-    	urlReport += `?categories=${categorias}&formula=${formula}`;
+        urlReport += `?categories=${categorias}&formula=${formula}`;
     } else {
-    	// Se não tiver categorias, só envia a fórmula
-    	urlReport += `?formula=${formula}`;
+        // Se não tiver categorias, só envia a fórmula
+        urlReport += `?formula=${formula}`;
     }
 
     try {
-	const resp = await fetch(urlReport);
+        const resp = await fetch(urlReport);
         const json = await resp.json();
 
-	const texto = json.data?.reportText || "Relatório vazio";
-    	const chartBase64 = json.data?.chartBase64 || null;
+// Se não houver dados no relatório
+        if (!json.data || !json.data.reportText) {
+            document.getElementById("output").innerHTML = `
+            <div class="painel-relatorio">
+                <h2>Resumo da Seleção de Materiais</h2>
+                <div class="linha">Nenhum relatório encontrado para este projeto.</div>
+            </div>
+        `;
+            return;
+        }
 
-    	// Quebra em linhas
-    	const linhas = texto.split("\n");
+        const texto = json.data.reportText;
+        const chartBase64 = json.data.chartBase64 || null;
+        ;
 
-    	// Monta painel estilizado
-    	let html = `<div class="painel-relatorio"><h2>Resumo da Seleção de Materiais</h2>`;
+        // Quebra em linhas
+        const linhas = texto.split("\n");
 
-    	linhas.forEach(l => {
-        	if (l.trim() !== "") {
-            		html += `<div class="linha">${l}</div>`;
-        	}
-    	});
+        // Monta painel estilizado
+        let html = `<div class="painel-relatorio"><h2>Resumo da Seleção de Materiais</h2>`;
 
-    	html += `</div>`;
+        linhas.forEach(l => {
+            if (l.trim() !== "") {
+                html += `<div class="linha">${l}</div>`;
+            }
+        });
 
-    	// Se existir gráfico, renderiza abaixo do relatório
-    	if (chartBase64) {
-        	html += `
+        html += `</div>`;
+
+        // Se existir gráfico, renderiza abaixo do relatório
+        if (chartBase64) {
+            html += `
             	<div class="painel-grafico"><h2>Gráfico (Baseado nos índices de desempenho)</h2>
                 	<div class="grafico-wrapper">
             		    <img src="data:image/png;base64,${chartBase64}" class="grafico-ashby"/>
         		</div>
             	</div>
         	`;
-    	}
+        } else {
+            html += `
+            <div class="painel-grafico">
+                <h2>Gráfico</h2>
+                <div class="linha">Nenhum gráfico disponível para este relatório.</div>
+            </div>
+        `;
+        }
 
-    document.getElementById("output").innerHTML = html;
+        document.getElementById("output").innerHTML = html;
 
     } catch (e) {
-        document.getElementById("output").textContent =
-            "O backend ainda não possui rota /api/selection/project/{projectId}/report";
+        document.getElementById("output").innerHTML = `
+        <div class="painel-relatorio">
+            <div class="linha">Erro ao gerar relatório. Verifique o backend.</div>
+        </div>
+    `;
     }
 };
 
@@ -216,12 +251,12 @@ document.getElementById("btnExportarPDF").onclick = () => {
     const elemento = document.querySelector(".container");
 
     const options = {
-        margin:       10,
-        filename:     'relatorio-material-selector.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        margin: 10,
+        filename: 'relatorio-material-selector.pdf',
+        image: {type: 'jpeg', quality: 0.98},
+        html2canvas: {scale: 2, scrollY: 0},
+        jsPDF: {unit: 'mm', format: 'a4', orientation: 'portrait'},
+        pagebreak: {mode: ['avoid-all', 'css', 'legacy']}
     };
 
     html2pdf()

@@ -1,4 +1,4 @@
-const API = "http://localhost:9000"; // Porta DEV do backend
+const API = "https://mec-eng-material-selector-api-1.onrender.com";
 
 // =========================
 // Controle do checkbox "Todos"
@@ -13,6 +13,13 @@ inputNome.disabled = false;
 document.getElementById("divFiltroNome").addEventListener("click", () => {
     chkTodos.checked = false;
     inputNome.disabled = false;
+});
+
+// Quando marcar "Todos", limpar o campo e desabilitar
+chkTodos.addEventListener("change", () => {
+    if (chkTodos.checked) {
+        inputNome.value = "";  // limpa o texto
+    }
 });
 
 // =========================
@@ -40,49 +47,99 @@ function renderProjetos(lista) {
         tbody.appendChild(tr);
     });
 
-	document.querySelectorAll(".chkSelecionarProjeto").forEach(chk => {
-    	    chk.addEventListener("change", () => {
+    document.querySelectorAll(".chkSelecionarProjeto").forEach(chk => {
+        chk.addEventListener("change", () => {
 
-        	// Desmarca todos os outros checkboxes
-        	document.querySelectorAll(".chkSelecionarProjeto").forEach(outro => {
-            		if (outro !== chk) outro.checked = false;
-       		});
+            // Desmarca todos os outros checkboxes
+            document.querySelectorAll(".chkSelecionarProjeto").forEach(outro => {
+                if (outro !== chk) outro.checked = false;
+            });
 
-        	// Se marcou, seleciona o projeto
-        	if (chk.checked) {
-        	    selecionarProjeto(chk.dataset.id, chk.dataset.nome);
-        	} else {
-            		// Se desmarcou o único selecionado
-            		projetoSelecionado = null;
-            		document.getElementById("tituloProjetoSelecionado").textContent =
-                		"Nenhum projeto selecionado";
-            		document.getElementById("listaRequisitos").innerHTML =
-                		"<li>Nenhum projeto selecionado</li>";
-        	}
-    	    });
-  	});
+            // Se marcou, seleciona o projeto
+            if (chk.checked) {
+                selecionarProjeto(chk.dataset.id, chk.dataset.nome);
+            } else {
+                // Se desmarcou o único selecionado
+                projetoSelecionado = null;
+                document.getElementById("tituloProjetoSelecionado").textContent =
+                    "Nenhum projeto selecionado";
+                document.getElementById("listaRequisitos").innerHTML =
+                    "<li>Nenhum projeto selecionado</li>";
+            }
+        });
+    });
 
+}
+
+// =========================
+// Paginação
+// =========================
+let paginaAtual = 0;
+let totalPaginas = 0;
+
+function atualizarPaginacao() {
+    const lblPagina = document.getElementById("lblPagina");
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNext = document.getElementById("btnNext");
+
+    lblPagina.textContent = `Página ${paginaAtual + 1} de ${totalPaginas}`;
+
+    btnPrev.disabled = paginaAtual === 0;
+    btnNext.disabled = paginaAtual === totalPaginas - 1;
 }
 
 // =========================
 // Carregar projetos
 // =========================
-async function carregarProjetos() {
-    let url = `${API}/api/projects`;
+async function carregarProjetos(pagina = 0) {
+
+    let url = `${API}/api/projects/paginated`;
 
     // Se NÃO for "todos", aplica filtro
     if (!chkTodos.checked && inputNome.value.trim() !== "") {
-        url += `/filter?name=${inputNome.value.trim()}`;
+        url += `/filter?name=${inputNome.value.trim()}&page=${pagina}`;
+    } else {
+        url += `?page=${pagina}`;
     }
 
     const resp = await fetch(url);
     const json = await resp.json();
-    
-    renderProjetos(json.data ?? []);
-    
+
+    // Atualiza variáveis globais
+    paginaAtual = json.data.pageNumber;
+    totalPaginas = json.data.totalPages;
+
+    const lista = json.data.content ?? [];
+    if (lista.length === 0) {
+        const tbody = document.querySelector("#tabelaProjetos tbody");
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="4" style="text-align:center; padding:15px; color:#555;">
+                Nenhum projeto encontrado
+            </td>
+        </tr>
+    `;
+
+        // Atualiza paginação para 0
+        paginaAtual = 0;
+        totalPaginas = 1;
+        atualizarPaginacao();
+        return;
+    }
+    renderProjetos(lista);
+
+    atualizarPaginacao(); // Atualiza botões de paginação
 }
 
-document.getElementById("btnCarregarProjetos").onclick = carregarProjetos;
+document.getElementById("btnPrev").onclick = () => {
+    if (paginaAtual > 0) carregarProjetos(paginaAtual - 1);
+};
+
+document.getElementById("btnNext").onclick = () => {
+    if (paginaAtual < totalPaginas - 1) carregarProjetos(paginaAtual + 1);
+};
+
+document.getElementById("btnCarregarProjetos").onclick = () => carregarProjetos(0);
 
 // =========================
 // Novo projeto
@@ -98,19 +155,19 @@ document.getElementById("btnCancelarProjeto").onclick = () => {
 document.getElementById("btnSalvarProjeto").onclick = async () => {
     const body = {
         name: document.getElementById("novoProjetoNome").value,
-	description: document.getElementById("novoProjetoDesc").value,
+        description: document.getElementById("novoProjetoDesc").value,
         team: document.getElementById("novoProjetoTime").value
     };
 
     try {
         await fetch(`${API}/api/projects`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(body)
         });
 
         document.getElementById("formNovoProjeto").style.display = "none";
-        carregarProjetos();
+        carregarProjetos(paginaAtual);
     } catch (e) {
         alert("O backend ainda não possui rota POST /api/projects");
     }
@@ -124,6 +181,10 @@ let projetoSelecionado = null;
 async function selecionarProjeto(id, nome) {
     projetoSelecionado = id;
     localStorage.setItem("projetoSelecionado", id);
+
+    // Zera o requisito selecionado ao trocar de projeto
+    requisitoSelecionado = null;
+    document.getElementById("reqSelecionado").textContent = "Nenhum requisito selecionado";
 
     document.getElementById("tituloProjetoSelecionado").textContent =
         `Projeto selecionado: ${nome}`;
@@ -139,6 +200,8 @@ async function carregarRequisitos() {
 
     if (!projetoSelecionado) {
         lista.innerHTML = "<li>Nenhum projeto selecionado</li>";
+        requisitoSelecionado = null;
+        document.getElementById("reqSelecionado").textContent = "Nenhum requisito selecionado";
         return;
     }
 
@@ -150,21 +213,52 @@ async function carregarRequisitos() {
 
         if (requisitos.length === 0) {
             lista.innerHTML = "<li>Nenhum requisito cadastrado</li>";
+            requisitoSelecionado = null;
+            document.getElementById("reqSelecionado").textContent = "Nenhum requisito selecionado";
             return;
         }
 
         lista.innerHTML = "";
-        requisitos.forEach(r => {
-            const tipo = r.type ?? r.tipo;
-            const valor = r.value ?? r.valor;
 
+        requisitos.forEach(r => {
             const li = document.createElement("li");
-            li.textContent = `${tipo}: ${valor}`;
+
+            li.textContent = `${r.type}: ${r.value} ${r.unit}`;
+            li.dataset.id = r.id;
+            li.dataset.type = r.type;
+            li.dataset.value = r.value;
+            li.dataset.unit = r.unit;
+            li.style.cursor = "pointer";
+
+            // Clique para selecionar o requisito
+            li.onclick = () => {
+                // Remove destaque dos outros
+                document.querySelectorAll("#listaRequisitos li").forEach(x => {
+                    x.style.background = "";
+                });
+
+                li.style.background = "#d0e7ff"; // Destaca o selecionado
+
+                // Guarda o requisito selecionado
+                requisitoSelecionado = {
+                    id: r.id,
+                    type: r.type,
+                    value: r.value,
+                    unit: r.unit
+                };
+
+                document.getElementById("reqSelecionado").textContent =
+                    `Selecionado: ${r.type} = ${r.value}  ${r.unit ?? ""}`;
+
+            };
+
             lista.appendChild(li);
         });
 
     } catch (e) {
-        lista.innerHTML = "<li>O backend ainda não possui rota de requisitos</li>";
+        lista.innerHTML = "<li>Erro ao carregar requisitos</li>";
+        requisitoSelecionado = null;
+        document.getElementById("reqSelecionado").textContent = "Nenhum requisito selecionado";
     }
 }
 
@@ -173,10 +267,20 @@ async function carregarRequisitos() {
 // =========================
 document.getElementById("btnIncluirRequisito").onclick = () => {
     document.getElementById("formNovoRequisito").style.display = "block";
+
+    // Habilita o select novamente
+    document.getElementById("selectTipoRequisito").disabled = false;
+
+    // Limpa os campos
+    document.getElementById("selectTipoRequisito").value = "";
+    document.getElementById("valorRequisito").value = "";
+
+    editando = false;
 };
 
 document.getElementById("btnCancelarRequisito").onclick = () => {
     document.getElementById("formNovoRequisito").style.display = "none";
+    document.getElementById("selectTipoRequisito").disabled = false;
 };
 
 document.getElementById("btnSalvarRequisito").onclick = async () => {
@@ -186,56 +290,99 @@ document.getElementById("btnSalvarRequisito").onclick = async () => {
     }
 
     const body = {
-        type: document.getElementById("selectTipoRequisito").value,
-        value: document.getElementById("valorRequisito").value
+        type: editando ? requisitoSelecionado.type : document.getElementById("selectTipoRequisito").value,
+        value: parseFloat(document.getElementById("valorRequisito").value)
     };
 
     try {
-        await fetch(`${API}/api/projects/${projetoSelecionado}/requirements`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
+        let resp;
+
+        if (editando) {
+            resp = await fetch(`${API}/api/projects/${projetoSelecionado}/requirements/${requisitoSelecionado.id}`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(body)
+            });
+
+            editando = false;
+            requisitoSelecionado = null;
+            document.getElementById("reqSelecionado").textContent = "Nenhum requisito selecionado";
+
+        } else {
+            resp = await fetch(`${API}/api/projects/${projetoSelecionado}/requirements`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(body)
+            });
+        }
+
+        const json = await resp.json();
+
+        if (!json.success) {
+            alert(json.message);
+            return;
+        }
 
         document.getElementById("formNovoRequisito").style.display = "none";
         carregarRequisitos();
 
     } catch (e) {
-        alert("O backend ainda não possui rota POST /requirements");
+        alert("Erro ao salvar requisito.");
+        console.error(e);
     }
+
+    document.getElementById("formNovoRequisito").style.display = "none";
+    carregarRequisitos();
 };
 
 // =========================
-// Indice de merito
+// Editar requisito
 // =========================
-document.addEventListener("DOMContentLoaded", function () {
+let editando = false;
 
-    const descricao = document.getElementById("descricaoIndice");
-    const select = document.getElementById("selectIndiceMerito");
+document.getElementById("btnEditarRequisito").onclick = () => {
+    if (!requisitoSelecionado) {
+        alert("Selecione um requisito para editar.");
+        return;
+    }
 
-    const textos = {
-        "E_RHO": "IM = E/ρ — Ideal para otimizar rigidez específica. Útil quando o objetivo é maximizar rigidez com o menor peso possível.",
-        "E_MEIO_RHO": "IM = √E/ρ — Usado em aplicações onde flexão domina. Favorece materiais com boa rigidez flexional.",
-        "SIGMAY_RHO": "IM = σy/ρ — Mede resistência específica. Excelente para componentes estruturais sujeitos a escoamento.",
-        "SIGMAY2_RHO": "IM = σy²/ρ — Favorece materiais com alta resistência ao escoamento. Bom para otimização de resistência com baixo peso.",
-        "KIC_RHO": "IM = KIC/ρ — Índice de tenacidade específica. Importante quando resistência à fratura é crítica.",
-        "LAMBKIC_SIGMAT": "IM = λ·KIC / σt — Combina condutividade térmica e tenacidade, penalizando baixa resistência última. Útil para aplicações termo‑mecânicas."
-    };
+    // Mostra o formulário
+    document.getElementById("formNovoRequisito").style.display = "block";
 
-    //Carrega automaticamente o texto da primeira opção
-    descricao.textContent = textos[select.value];
-    localStorage.setItem("formulaSelecionada", select.value);
-    localStorage.setItem("descricaoFormula", textos[select.value]);
+    // Bloqueia o select e mantém o tipo original
+    document.getElementById("selectTipoRequisito").value = requisitoSelecionado.type;
+    document.getElementById("selectTipoRequisito").disabled = true;
 
-    //Atualiza quando o usuário troca
-    select.addEventListener("change", function () {
-        const valor = select.value;
-        descricao.textContent = textos[valor];
-        localStorage.setItem("formulaSelecionada", valor);
-        localStorage.setItem("descricaoFormula", textos[valor]);
+    // Preenche apenas o valor
+    document.getElementById("valorRequisito").value = requisitoSelecionado.value;
+
+    editando = true;
+};
+
+// =========================
+// Excluir requisito
+// =========================
+document.getElementById("btnExcluirRequisito").onclick = async () => {
+    if (!projetoSelecionado) {
+        alert("Selecione um projeto primeiro.");
+        return;
+    }
+    if (!requisitoSelecionado) {
+        alert("Selecione um requisito para excluir.");
+        return;
+    }
+
+    if (!confirm("Tem certeza que deseja excluir este requisito?")) return;
+
+    await fetch(`${API}/api/projects/${projetoSelecionado}/requirements/${requisitoSelecionado.id}`, {
+        method: "DELETE"
     });
 
-});
+    requisitoSelecionado = null;
+    document.getElementById("reqSelecionado").textContent = "Nenhum requisito selecionado";
+
+    carregarRequisitos();
+};
 
 // =========================
 // Controle do botão Avançar

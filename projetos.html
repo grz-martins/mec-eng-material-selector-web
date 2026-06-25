@@ -4,50 +4,87 @@
     <meta charset="UTF-8">
     <title>Material Selector – Interface Web</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #eef2f3; }
-        .container { 
-            max-width: 900px; 
-            margin: auto; 
-            background: white; 
-            padding: 30px; 
-            border-radius: 10px; 
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #eef2f3;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
             position: relative;
-	    padding-bottom: 80px;
+            padding-bottom: 80px;
         }
-        button { 
-            padding: 10px 15px; 
-            margin: 5px; 
-            border: none; 
-            background: #007bff; 
-            color: white; 
-            border-radius: 5px; 
+
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
         }
-        button:hover { background: #0056b3; cursor: pointer; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ccc; padding: 10px; }
-        th { background: #f0f0f0; }
-        .nav-left { position: absolute; bottom: 20px; left: 20px; }
-        .nav-right { position: absolute; bottom: 20px; right: 20px; }
-	
-	#btnCarregarProjetos,
+
+        button:hover {
+            background: #0056b3;
+            cursor: pointer;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        th {
+            background: #f0f0f0;
+        }
+
+        .nav-left {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .nav-right {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        #btnCarregarProjetos,
         #btnNovoProjeto {
             margin-top: 20px;
         }
 
-	.checkbox-inline {
-	    display: inline-flex;
-	    align-items: center;
-    	    gap: 8px;
-    	    white-space: nowrap;
-    	    margin: 5px 0;
-	}
+        .checkbox-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            margin: 5px 0;
+        }
 
         .btn-desabilitado {
-    	    opacity: 0.5; /* aparência de desabilitado */
+            opacity: 0.5; /* aparência de desabilitado */
             cursor: not-allowed !important; /* visual de cursor bloqueado */
             pointer-events: auto !important; /* permite clique mesmo desabilitado */
-	}
+        }
     </style>
 </head>
 <body>
@@ -59,8 +96,8 @@
     <h3>Consulta</h3>
 
     <label class="checkbox-inline">
-    	<input type="checkbox" id="chkTodosProjetos">
-    	Todos os projetos
+        <input type="checkbox" id="chkTodosProjetos">
+        Todos os projetos
     </label>
 
     <div id="divFiltroNome" style="margin-top:10px;">
@@ -72,21 +109,27 @@
 
     <table id="tabelaProjetos">
         <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Descrição</th>
-                <th>Time</th>
-                <th>Selecionar</th>
-            </tr>
+        <tr>
+            <th>Nome do componente</th>
+            <th>Descrição do projeto</th>
+            <th>Time</th>
+            <th>Selecionar</th>
+        </tr>
         </thead>
         <tbody></tbody>
     </table>
 
+    <div style="margin-top: 20px; display: flex; gap: 10px; align-items: center;">
+        <button id="btnPrev">◀ Anterior</button>
+        <span id="lblPagina">Página 1 de 1</span>
+        <button id="btnNext">Próxima ▶</button>
+    </div>
+
     <div id="formNovoProjeto" style="display:none; margin-top:20px;">
         <h3>Novo Projeto</h3>
-        <input id="novoProjetoNome" placeholder="Nome do projeto">
+        <input id="novoProjetoNome" placeholder="* Nome do componente de projeto">
         <input id="novoProjetoDesc" placeholder="Descrição do projeto">
-        <input id="novoProjetoTime" placeholder="Time responsável">
+        <input id="novoProjetoTime" placeholder="* Time responsável">
         <button id="btnSalvarProjeto">Salvar</button>
         <button id="btnCancelarProjeto">Cancelar</button>
     </div>
@@ -96,66 +139,35 @@
         <h2>• Etapa 2 - Requisitos do Projeto</h2>
         <p id="tituloProjetoSelecionado">Nenhum projeto selecionado</p>
 
-        <h3>Requisitos cadastrados</h3>
+        <h3>Restrições cadastradas</h3>
         <ul id="listaRequisitos">
             <li>Nenhum projeto selecionado</li>
         </ul>
 
+        <p id="reqSelecionado" style="margin-top:10px; font-style:italic;">
+            Nenhum requisito selecionado
+        </p>
+
         <button id="btnIncluirRequisito">Incluir Requisito</button>
+        <button id="btnEditarRequisito">Editar Requisito</button>
+        <button id="btnExcluirRequisito">Excluir Requisito</button>
 
         <div id="formNovoRequisito" style="display:none; margin-top:15px;">
-            <h3>Novo Requisito</h3>
             <select id="selectTipoRequisito">
-                <option value="densidade_max">densidade_max</option>
-                <option value="mod_elastic_min">mod_elastic_min</option>
-                <option value="lim_escoamento_min">lim_escoamento_min</option>
-                <option value="resitenc_tracao_min">resitenc_tracao_min</option>
-                <option value="tenacid_fratura_min">tenacid_fratura_min</option>
-                <option value="condut_termica_max">condut_termica_max</option>
+                <option value="">* Selecione o tipo da restrição de projeto</option>
+                <option value="densidade_max">densidade_max (kg/m³)</option>
+                <option value="mod_elastic_min">mod_elastic_min (MPa)</option>
+                <option value="lim_escoamento_min">lim_escoamento_min (MPa)</option>
+                <option value="resitenc_tracao_min">resitenc_tracao_min (MPa)</option>
+                <option value="tenacid_fratura_min">tenacid_fratura_min (MPa·m¹/²)</option>
+                <option value="condut_termica_max">condut_termica_max (W/m*K)</option>
             </select>
-            <input id="valorRequisito" placeholder="Valor do requisito">
+            <input id="valorRequisito" placeholder="* Valor do requisito">
             <button id="btnSalvarRequisito">Salvar</button>
             <button id="btnCancelarRequisito">Cancelar</button>
         </div>
 
     </div>
-
-<!-- ETAPA 3 - Selecionar Índice de Mérito -->
-<div id="secIndiceMerito" style="margin-top:30px;">
-    <h2>• Etapa 3 - Selecionar Índice de Mérito</h2>
-
-    <p>Escolha o índice de mérito que será utilizado no cálculo de desempenho dos materiais:</p>
-
-    <select id="selectIndiceMerito">
-
-        <option value="E_RHO">
-            Módulo de Young / Densidade
-        </option>
-
-        <option value="E_MEIO_RHO">
-            Raiz do Módulo de Young / Densidade
-        </option>
-
-        <option value="SIGMAY_RHO">
-            Limite de Escoamento / Densidade
-        </option>
-
-        <option value="SIGMAY2_RHO">
-            Limite de Escoamento² / Densidade
-        </option>
-
-        <option value="KIC_RHO">
-            Tenacidade à Fratura / Densidade
-        </option>
-
-        <option value="LAMBKIC_SIGMAT">
-            (Condutividade Térmica × Tenacidade à Fratura) / Tensão Última
-        </option>
-
-    </select>
-
-    <p id="descricaoIndice" style="margin-top:10px; font-style:italic; color:#444;"></p>
-</div>
 
     <!-- Navegação -->
     <button class="nav-left" onclick="window.location.href='index.html'">Voltar</button>
